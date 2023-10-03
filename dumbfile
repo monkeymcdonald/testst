@@ -1,1 +1,44 @@
-me
+
+# Load the necessary libraries
+library(plotly)
+library(crosstalk)
+library(ggplot2)
+
+# Example dataset
+df <- data.frame(
+  PC1 = rnorm(100),
+  PC2 = rnorm(100),
+  PC3 = rnorm(100),
+  factor_col = factor(rep(1:5, each = 20))
+)
+# Perform PCA
+pca_result <- prcomp(df[, -1], scale = TRUE)
+
+# Create a data frame for PCA results
+pca_df <- as.data.frame(pca_result$x)
+
+# Add the factor you want to color by to the PCA data frame, e.g., 'factor_col'
+pca_df$color_factor <- df$factor_col
+# Create the ggplot object
+pca_plot <- ggplot(pca_df, aes(x = PC1, y = PC2, z = PC3, color = color_factor)) +
+  geom_point() +
+  labs(title = "3D PCA Plot") +
+  theme_minimal()
+
+# Convert ggplot object to a plotly object
+plotly_obj <- ggplotly(pca_plot)
+# Create a SharedData object
+shared_data <- SharedData$new(pca_df)
+
+# Create a filter for the factor column
+factor_filter <- filter_select(
+  input_id = "factor_filter", 
+  label = "Select a Factor to Color by:", 
+  shared_data = shared_data,
+  column = color_factor
+)
+# Display the interactive plot
+htmltools::div(
+  factor_filter,
+  plotly_obj
+)
